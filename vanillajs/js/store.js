@@ -23,7 +23,7 @@
 			localStorage[name] = JSON.stringify(data);
 		}
 
-		callback.call(this, JSON.parse(localStorage[name]));
+		callback.call(this, this);
 	}
 
 	/**

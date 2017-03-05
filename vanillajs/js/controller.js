@@ -179,19 +179,21 @@
 	 * @param {object} checkbox The checkbox to check the state of complete
 	 *                          or not
 	 * @param {boolean|undefined} silent Prevent re-filtering the todo items
+	 * @param {function} callback A callback to call when the toggling is complete
 	 */
-	Controller.prototype.toggleComplete = function (id, completed, silent) {
+	Controller.prototype.toggleComplete = function (id, completed, silent, callback) {
+		callback = callback || function () {};
 		var self = this;
 		self.model.update(id, { completed: completed }, function () {
 			self.view.render('elementComplete', {
 				id: id,
 				completed: completed
 			});
+			if (!silent) {
+				self._filter();
+			}
+			callback.call(self, id)
 		});
-
-		if (!silent) {
-			self._filter();
-		}
 	};
 
 	/**
@@ -201,12 +203,16 @@
 	Controller.prototype.toggleAll = function (completed) {
 		var self = this;
 		self.model.read({ completed: !completed }, function (data) {
+			var toggled = [];
 			data.forEach(function (item) {
-				self.toggleComplete(item.id, completed, true);
+				self.toggleComplete(item.id, completed, true, function(id) {
+					toggled.push(id);
+					if (toggled.length == data.length) {
+						self._filter();
+					}
+				});
 			});
 		});
-
-		self._filter();
 	};
 
 	/**
